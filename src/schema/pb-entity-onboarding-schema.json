@@ -1,0 +1,273 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "pb-entity-onboarding-v1",
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Private Banking High-Net-Worth Entity Onboarding Dossier",
+      "id": "header_title"
+    },
+    {
+      "type": "tabs",
+      "id": "main_onboarding_tabs",
+      "tabs": [
+        {
+          "label": "Tab 1: Entity Profile & Structure",
+          "id": "tab_entity_profile",
+          "components": [
+            {
+              "type": "group",
+              "id": "group_entity_basic_info",
+              "label": "1.1 Basic Entity Information",
+              "components": [
+                {
+                  "key": "entityName",
+                  "label": "Legal Entity Name",
+                  "type": "textfield",
+                  "validate": {
+                    "required": true
+                  }
+                },
+                {
+                  "key": "entityType",
+                  "label": "Entity Structure",
+                  "type": "select",
+                  "validate": {
+                    "required": true
+                  },
+                  "values": [
+                    {
+                      "label": "Private Trust",
+                      "value": "TRUST"
+                    },
+                    {
+                      "label": "Special Purpose Vehicle (SPV)",
+                      "value": "SPV"
+                    },
+                    {
+                      "label": "Operating Corporation",
+                      "value": "CORPORATE"
+                    },
+                    {
+                      "label": "Foundation / Partnership",
+                      "value": "FOUNDATION"
+                    }
+                  ]
+                },
+                {
+                  "key": "registrationNumber",
+                  "label": "Company Registration / Trust Deed No.",
+                  "type": "textfield",
+                  "validate": {
+                    "required": true
+                  }
+                },
+                {
+                  "key": "countryOfIncorporation",
+                  "label": "Jurisdiction of Incorporation",
+                  "type": "select",
+                  "values": [
+                    {
+                      "label": "Singapore",
+                      "value": "SG"
+                    },
+                    {
+                      "label": "Cayman Islands",
+                      "value": "KY"
+                    },
+                    {
+                      "label": "British Virgin Islands",
+                      "value": "BVI"
+                    },
+                    {
+                      "label": "Hong Kong",
+                      "value": "HK"
+                    },
+                    {
+                      "label": "United States",
+                      "value": "US"
+                    }
+                  ],
+                  "validate": {
+                    "required": true
+                  }
+                }
+              ]
+            },
+            {
+              "type": "group",
+              "id": "group_trust_specifics",
+              "label": "1.2 Trust / Foundation Special Disclosures",
+              "hide": "=entityType != \"TRUST\" and entityType != \"FOUNDATION\"",
+              "components": [
+                {
+                  "key": "trusteeName",
+                  "label": "Primary Trustee / Protector Corporate Name",
+                  "type": "textfield",
+                  "validate": {
+                    "required": true
+                  }
+                },
+                {
+                  "key": "trustGoverningLaw",
+                  "label": "Governing Law Jurisdiction",
+                  "type": "textfield"
+                },
+                {
+                  "key": "isRevocableTrust",
+                  "label": "Is this Trust Revocable?",
+                  "type": "checkbox",
+                  "defaultValue": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Tab 2: Tax & Regulatory Profiling",
+          "id": "tab_tax_regulatory",
+          "components": [
+            {
+              "type": "group",
+              "id": "group_fatca_crs",
+              "label": "2.1 FATCA & CRS Tax Classification",
+              "components": [
+                {
+                  "key": "isTaxResidentSG",
+                  "label": "Is Entity Tax Resident exclusively in Singapore?",
+                  "type": "checkbox",
+                  "defaultValue": true
+                },
+                {
+                  "key": "foreignTaxJurisdictions",
+                  "label": "Primary Foreign Tax Residence",
+                  "type": "select",
+                  "hide": "=isTaxResidentSG = true",
+                  "values": [
+                    {
+                      "label": "United States",
+                      "value": "US"
+                    },
+                    {
+                      "label": "United Kingdom",
+                      "value": "UK"
+                    },
+                    {
+                      "label": "China",
+                      "value": "CN"
+                    },
+                    {
+                      "label": "Others",
+                      "value": "OTHER"
+                    }
+                  ]
+                },
+                {
+                  "key": "tinNumber",
+                  "label": "Tax Identification Number (TIN)",
+                  "type": "textfield",
+                  "hide": "=isTaxResidentSG = true",
+                  "validate": {
+                    "required": true,
+                    "pattern": "^[A-Za-z0-9-]{6,20}$"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "group",
+              "id": "group_investor_suitability",
+              "label": "2.2 Investor Suitability (AI/PI Profiling)",
+              "components": [
+                {
+                  "key": "isAccreditedInvestor",
+                  "label": "Opt-in as Accredited Investor (AI)?",
+                  "type": "checkbox",
+                  "defaultValue": false
+                },
+                {
+                  "key": "aiQualificationBasis",
+                  "label": "Basis of AI Qualification",
+                  "type": "select",
+                  "hide": "=isAccreditedInvestor = false",
+                  "values": [
+                    {
+                      "label": "Net Financial Assets > SGD 2 Million equivalent",
+                      "value": "NET_FIN_ASSETS"
+                    },
+                    {
+                      "label": "Net Business / Entity Assets > SGD 10 Million",
+                      "value": "ENTITY_ASSETS"
+                    },
+                    {
+                      "label": "Corporation wholly owned by AIs",
+                      "value": "WHOLLY_OWNED_AI"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Tab 3: Entity Ownership & Relationship Tree",
+          "id": "tab_ownership_tree",
+          "components": [
+            {
+              "type": "dynamiclist",
+              "key": "participants",
+              "id": "list_participants",
+              "label": "Associated Entity Participants",
+              "components": [
+                {
+                  "key": "participantName",
+                  "label": "Full Name / Corporate Entity Name",
+                  "type": "textfield",
+                  "validate": {
+                    "required": true
+                  }
+                },
+                {
+                  "key": "participantRole",
+                  "label": "Role in Entity Structure",
+                  "type": "select",
+                  "validate": {
+                    "required": true
+                  },
+                  "values": [
+                    {
+                      "label": "Ultimate Beneficial Owner (UBO)",
+                      "value": "UBO"
+                    },
+                    {
+                      "label": "Director / Council Member",
+                      "value": "DIRECTOR"
+                    },
+                    {
+                      "label": "Authorised Signatory",
+                      "value": "SIGNATORY"
+                    },
+                    {
+                      "label": "Settlor / Grantor",
+                      "value": "SETTLOR"
+                    }
+                  ]
+                },
+                {
+                  "key": "shareholdingPercentage",
+                  "label": "Ownership / Voting Share (%)",
+                  "type": "number",
+                  "validate": {
+                    "min": 0,
+                    "max": 100
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
