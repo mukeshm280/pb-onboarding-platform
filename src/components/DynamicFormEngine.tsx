@@ -25,6 +25,8 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
     const formRef = useRef<Form | null>(null);
     const onChangeRef = useRef(onChange);
     const onTouchedFieldRef = useRef(onTouchedField);
+    const initialDataRef = useRef(initialData);
+    const showAllErrorsRef = useRef(showAllErrors);
     const previousDataRef = useRef<Record<string, unknown>>(initialData);
     const isFormInitializedRef = useRef<boolean>(false);
     const touchedFieldsRef = useRef<Set<string>>(new Set());
@@ -39,10 +41,19 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
         onTouchedFieldRef.current = onTouchedField;
     }, [onTouchedField]);
 
-    // Reset touched fields when schema changes
+    useEffect(() => {
+        initialDataRef.current = initialData;
+    }, [initialData]);
+
+    useEffect(() => {
+        showAllErrorsRef.current = showAllErrors;
+    }, [showAllErrors]);
+
+    // Reset touched fields when schema changes.
+    // Clearing validation state is deferred until the schema import resolves so the
+    // effect body does not trigger a synchronous state update.
     useEffect(() => {
         touchedFieldsRef.current.clear();
-        setValidationErrors({});
         isFormInitializedRef.current = false;
     }, [schema]);
 
@@ -65,19 +76,21 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
         });
 
         formRef.current = form;
-        previousDataRef.current = initialData;
+        previousDataRef.current = initialDataRef.current;
 
         // Import schema & initial data
-        form.importSchema(schema, initialData).then(() => {
+        form.importSchema(schema, initialDataRef.current).then(() => {
+            setValidationErrors({});
+
             // Save initialized data state and mark form as ready
             try {
-                previousDataRef.current = form._getState()?.data || initialData;
+                previousDataRef.current = form._getState()?.data || initialDataRef.current;
             } catch {
-                previousDataRef.current = initialData;
+                previousDataRef.current = initialDataRef.current;
             }
             isFormInitializedRef.current = true;
 
-            if (showAllErrors) {
+            if (showAllErrorsRef.current) {
                 try {
                     form.validate();
                 } catch {
@@ -150,7 +163,7 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
             form.destroy();
             formRef.current = null;
         };
-    }, [schema]); // Only re-instantiate if schema definition changes
+    }, [schema]);
 
     // When showAllErrors is true (e.g. Next / Submit clicked), trigger form-js full validation
     useEffect(() => {

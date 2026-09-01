@@ -1,3 +1,5 @@
+/** @jest-environment jsdom */
+
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
@@ -8,7 +10,7 @@ describe('ParticipantTree', () => {
   beforeEach(() => {
     const store = new Map<string, string>();
 
-    Object.defineProperty(globalThis, 'localStorage', {
+    Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: jest.fn((key: string) => (store.has(key) ? store.get(key)! : null)),
         setItem: jest.fn((key: string, value: string) => {

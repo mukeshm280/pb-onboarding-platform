@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
     TextField,
     Select,
@@ -69,23 +69,8 @@ export const ParticipantTree: React.FC<ParticipantTreeProps> = ({
         severity: 'success',
     });
     const [isRemoving, setIsRemoving] = useState<number | null>(null);
-    const [participantErrors, setParticipantErrors] = useState<Record<number, Record<string, string>>>({});
     const [touched, setTouched] = useState<Record<number, Record<string, boolean>>>({});
     const hasHydratedFromStorageRef = useRef(false);
-
-    const markFieldTouched = (index: number, field: string) => {
-        setTouched((prev) => ({
-            ...prev,
-            [index]: {
-                ...(prev[index] || {}),
-                [field]: true,
-            },
-        }));
-    };
-
-    const isFieldTouched = (index: number, field: string) => {
-        return showAllErrors || Boolean(touched[index]?.[field]);
-    };
 
     // Validate a participant
     const validateParticipant = useCallback((participant: EntityParticipant): Record<string, string> => {
@@ -107,17 +92,32 @@ export const ParticipantTree: React.FC<ParticipantTreeProps> = ({
         return errors;
     }, []);
 
-    // Update validation state whenever participants change
-    useEffect(() => {
+    const participantErrors = useMemo(() => {
         const allErrors: Record<number, Record<string, string>> = {};
-        participants.forEach((p, idx) => {
-            const errors = validateParticipant(p);
+
+        participants.forEach((participant, index) => {
+            const errors = validateParticipant(participant);
             if (Object.keys(errors).length > 0) {
-                allErrors[idx] = errors;
+                allErrors[index] = errors;
             }
         });
-        setParticipantErrors(allErrors);
+
+        return allErrors;
     }, [participants, validateParticipant]);
+
+    const markFieldTouched = (index: number, field: string) => {
+        setTouched((prev) => ({
+            ...prev,
+            [index]: {
+                ...(prev[index] || {}),
+                [field]: true,
+            },
+        }));
+    };
+
+    const isFieldTouched = (index: number, field: string) => {
+        return showAllErrors || Boolean(touched[index]?.[field]);
+    };
 
     // Load participants from localStorage only once per case, and never after an explicit delete.
     useEffect(() => {
