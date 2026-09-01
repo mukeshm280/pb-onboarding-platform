@@ -211,18 +211,34 @@ export function validateComponents(
 /**
  * Validates all schema fields for a given step index against the provided form data.
  */
+interface SchemaTabDefinition {
+  id?: string;
+  components?: FormComponent[];
+}
+
+interface TabsSchemaDefinition {
+  type?: string;
+  tabs?: SchemaTabDefinition[];
+}
+
 export function validateStep(
   stepIndex: number,
   formData: Record<string, unknown>
 ): StepValidationResult {
-  const tabsComponent = schema.components?.find((c: any) => c.type === 'tabs') as { tabs?: Array<{ id: string; components?: FormComponent[] }> } | undefined;
+  const tabsComponent = schema.components?.find(
+    (component) =>
+      typeof component === 'object' &&
+      component !== null &&
+      'type' in component &&
+      component.type === 'tabs',
+  ) as TabsSchemaDefinition | undefined;
 
   if (!tabsComponent?.tabs || stepIndex < 0 || stepIndex >= tabsComponent.tabs.length) {
     return { isValid: true, errors: {} };
   }
 
   const selectedTab = tabsComponent.tabs[stepIndex];
-  const components = (selectedTab.components || []) as FormComponent[];
+  const components = selectedTab.components || [];
   const errors = validateComponents(components, formData);
 
   return {

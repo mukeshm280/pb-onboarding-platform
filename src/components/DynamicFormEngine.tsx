@@ -89,7 +89,7 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
         });
 
         // Event binding for form field blur (touched state)
-        const handleFormFieldBlur = (event: any) => {
+        const handleFormFieldBlur = (event: { formField?: { key?: string; id?: string } }) => {
             const fieldKey = event?.formField?.key || event?.formField?.id;
             if (fieldKey && isFormInitializedRef.current) {
                 markFieldTouched(fieldKey);
@@ -158,7 +158,7 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
             try {
                 formRef.current.validate();
             } catch {
-                // Ignore any internal form-js validation errors
+                // Ignore internal form-js validation errors
             }
         }
     }, [showAllErrors]);
