@@ -1,6 +1,14 @@
 import { validateStep, canNavigateToStep } from './schemaValidator';
 
 describe('JSON Schema Step Validator', () => {
+  it('only treats boolean FEEL results as hide conditions', () => {
+    const { isComponentHidden } = require('./schemaValidator');
+
+    expect(isComponentHidden('entityType = "TRUST"', { entityType: 'TRUST' })).toBe(true);
+    expect(isComponentHidden('entityType = "TRUST"', { entityType: 'CORPORATE' })).toBe(false);
+    expect(isComponentHidden('entityType', { entityType: 'TRUST' })).toBe(false);
+  });
+
   describe('Step 0: Entity Profile & Structure', () => {
     it('fails when Step 0 required fields are missing', () => {
       const invalidData = {};

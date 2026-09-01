@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Container, Box, AppBar, Toolbar, Typography, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { DynamicFormEngine } from './components/DynamicFormEngine';
+import { normalizeValidationErrors } from './utils/validationUtils';
 import { ParticipantTree } from './components/ParticipantTree';
 import { OnboardingStepper } from './components/OnboardingStepper';
 import { useDebouncedAutosave } from './hooks/useDebouncedAutosave';
@@ -67,7 +68,11 @@ export const App: React.FC = () => {
     // If step was previously submitted, keep its validation errors synced
     if (stepSubmitted[newStep]) {
       const stepValidation = validateStep(newStep, formData);
-      setFormErrors(stepValidation.errors);
+      if (stepValidation.isValid) {
+        setFormErrors({});
+      } else {
+        setFormErrors(stepValidation.errors);
+      }
     } else {
       setFormErrors({});
     }
@@ -85,21 +90,21 @@ export const App: React.FC = () => {
 
       // Re-validate against JSON schema
       const stepValidation = validateStep(activeStep, mergedData);
+      const normalizedEngineErrors = normalizeValidationErrors(engineErrors || {});
+
+      // Clear stale errors immediately once the current step becomes valid.
+      if (stepValidation.isValid) {
+        setFormErrors({});
+        return;
+      }
 
       // Only expose formErrors to children if the step has been submitted (Next button clicked)
       if (stepSubmitted[activeStep]) {
-        if (stepValidation.isValid && (!engineErrors || Object.keys(engineErrors).length === 0)) {
-          setFormErrors({});
-        } else {
-          const errorMap: Record<string, string> = { ...stepValidation.errors };
-          if (engineErrors) {
-            Object.entries(engineErrors).forEach(([key, err]: [string, any]) => {
-              const msg = Array.isArray(err) ? err[0] : (err?.message || `Invalid value for ${key}`);
-              errorMap[key] = msg;
-            });
-          }
-          setFormErrors(errorMap);
-        }
+        const errorMap: Record<string, string> = {
+          ...normalizeValidationErrors(stepValidation.errors),
+          ...normalizedEngineErrors,
+        };
+        setFormErrors(errorMap);
       } else {
         setFormErrors({});
       }

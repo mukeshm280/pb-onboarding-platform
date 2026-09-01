@@ -47,7 +47,13 @@ export function isComponentHidden(
       : hideExpression.trim();
 
     const result = evaluate(expression, formData);
-    return Boolean(result?.value);
+    const value = result?.value;
+
+    if (typeof value !== 'boolean') {
+      return false;
+    }
+
+    return value;
   } catch (err) {
     console.warn(`Failed to evaluate FEEL expression "${hideExpression}":`, err);
     return false;

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Form } from '@bpmn-io/form-js';
 import { Box, Alert } from '@mui/material';
 import '@bpmn-io/form-js/dist/assets/form-js.css';
+import { normalizeValidationErrors } from '../utils/validationUtils';
 
 interface DynamicFormEngineProps {
     schema: Record<string, unknown>;
@@ -110,16 +111,8 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
             }
 
             // Track validation errors
-            if (event.errors && Object.keys(event.errors).length > 0) {
-                const errorMap: Record<string, string> = {};
-                Object.entries(event.errors).forEach(([key, error]: [string, any]) => {
-                    const message = Array.isArray(error) ? error[0] : (error?.message || `Invalid value for ${key}`);
-                    errorMap[key] = message;
-                });
-                setValidationErrors(errorMap);
-            } else {
-                setValidationErrors({});
-            }
+            const errorMap = normalizeValidationErrors(event.errors || {});
+            setValidationErrors(errorMap);
 
             if (onChangeRef.current) {
                 onChangeRef.current(event.data, event.errors);
@@ -177,7 +170,10 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({
             return {};
         }
 
-        const merged: Record<string, string> = { ...externalErrors, ...validationErrors };
+        const merged: Record<string, string> = {
+            ...normalizeValidationErrors(externalErrors),
+            ...normalizeValidationErrors(validationErrors),
+        };
         return merged;
     }, [externalErrors, validationErrors, showAllErrors]);
 

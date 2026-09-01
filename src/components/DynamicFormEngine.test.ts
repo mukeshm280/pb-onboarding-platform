@@ -1,4 +1,9 @@
+jest.mock('@bpmn-io/form-js', () => ({
+  Form: class MockForm {},
+}));
+
 import { validateStep } from '../utils/schemaValidator';
+import { normalizeValidationErrors } from '../utils/validationUtils';
 
 describe('DynamicFormEngine Validation Error Display Rules', () => {
   // Helper simulating DynamicFormEngine error display filtering logic
@@ -70,5 +75,19 @@ describe('DynamicFormEngine Validation Error Display Rules', () => {
       true
     );
     expect(Object.keys(displayedErrorsAfter).length).toBe(0);
+  });
+
+  it('Rule 4: Generic engine required-field errors are filtered while labeled errors stay', () => {
+    const normalized = normalizeValidationErrors({
+      entityName: 'Legal Entity Name is required.',
+      entityType: 'Field is required.',
+      registrationNumber: 'Company Registration / Trust Deed No. is required.',
+      countryOfIncorporation: 'Field is required.',
+      otherField: 'Field is required.',
+    });
+
+    expect(Object.keys(normalized)).toEqual(['entityName', 'registrationNumber']);
+    expect(normalized.entityName).toBe('Legal Entity Name is required.');
+    expect(normalized.registrationNumber).toBe('Company Registration / Trust Deed No. is required.');
   });
 });
