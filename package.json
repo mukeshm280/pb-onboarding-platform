@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "jest --runInBand --watch=false",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -37,6 +38,7 @@
     "eslint-plugin-react-refresh": "^0.5.4",
     "globals": "^17.11.0",
     "jest": "^30.5.0",
+    "jest-environment-jsdom": "^30.5.1",
     "react-testing-library": "^8.0.1",
     "ts-jest": "^29.4.12",
     "typescript": "~6.0.2",

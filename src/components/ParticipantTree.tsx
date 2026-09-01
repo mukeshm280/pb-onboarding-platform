@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     TextField,
     Select,
@@ -42,6 +42,11 @@ const loadParticipantsFromStorage = (caseId: string): EntityParticipant[] => {
 
 const saveParticipantsToStorage = (caseId: string, participants: EntityParticipant[]): void => {
     try {
+        if (participants.length === 0) {
+            localStorage.removeItem(getStorageKey(caseId));
+            return;
+        }
+
         localStorage.setItem(getStorageKey(caseId), JSON.stringify(participants));
     } catch (error) {
         console.error('Failed to save participants to storage:', error);
@@ -66,6 +71,7 @@ export const ParticipantTree: React.FC<ParticipantTreeProps> = ({
     const [isRemoving, setIsRemoving] = useState<number | null>(null);
     const [participantErrors, setParticipantErrors] = useState<Record<number, Record<string, string>>>({});
     const [touched, setTouched] = useState<Record<number, Record<string, boolean>>>({});
+    const hasHydratedFromStorageRef = useRef(false);
 
     const markFieldTouched = (index: number, field: string) => {
         setTouched((prev) => ({
@@ -113,15 +119,21 @@ export const ParticipantTree: React.FC<ParticipantTreeProps> = ({
         setParticipantErrors(allErrors);
     }, [participants, validateParticipant]);
 
-    // Load participants from localStorage on mount or caseId change
+    // Load participants from localStorage only once per case, and never after an explicit delete.
     useEffect(() => {
+        if (hasHydratedFromStorageRef.current || !caseId) {
+            return;
+        }
+
+        hasHydratedFromStorageRef.current = true;
+
         const storedParticipants = loadParticipantsFromStorage(caseId);
         if (storedParticipants.length > 0 && participants.length === 0) {
             onUpdate(storedParticipants);
         }
     }, [caseId, onUpdate, participants.length]);
 
-    // Save participants to localStorage whenever they change
+    // Save participants to localStorage whenever they change, removing stale empty data.
     useEffect(() => {
         saveParticipantsToStorage(caseId, participants);
     }, [caseId, participants]);

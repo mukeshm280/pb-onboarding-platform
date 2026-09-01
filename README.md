@@ -1,5 +1,7 @@
 # Private Banking Onboarding Platform
 
+Live demo: https://pb-onboarding-platform.mukeshm280.workers.dev/
+
 This project renders a multi-step onboarding workflow using a schema-driven form engine. The experience is built around JSON-defined steps, FEEL-based conditions, and a single application state model that keeps validation, autosave, and step navigation in sync.
 
 ## Form lifecycle with @bpmn-io/form-js
@@ -100,7 +102,7 @@ npm run preview
 ### Run the test suite
 
 ```bash
-npx jest --runInBand --watch=false
+npm run test
 ```
 
 ## Summary
