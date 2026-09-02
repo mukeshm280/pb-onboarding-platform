@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Stepper, Step, StepLabel, StepButton, Button, Box, Paper, Stack, Alert } from '@mui/material';
+import { Stepper, Step, StepLabel, StepButton, Button, Box, Paper, Stack, Alert, CircularProgress } from '@mui/material';
 
 export interface StepValidationResult {
   isValid: boolean;
@@ -13,6 +13,7 @@ interface OnboardingStepperProps {
   onValidateStep?: (stepIndex: number) => StepValidationResult;
   onValidationError?: (errors: Record<string, string>, stepIndex: number) => void;
   onSubmit?: () => void;
+  isSubmitting?: boolean;
   completedSteps?: number[] | Set<number>;
   hasErrors?: boolean;
   disableNextOnErrors?: boolean;
@@ -27,6 +28,7 @@ export function OnboardingStepper({
   onValidateStep,
   onValidationError,
   onSubmit,
+  isSubmitting = false,
   completedSteps,
   hasErrors = false,
   disableNextOnErrors = true,
@@ -77,6 +79,8 @@ export function OnboardingStepper({
   };
 
   const handleNext = () => {
+    if (isSubmitting) return;
+
     if (activeStep < steps.length - 1) {
       const nextStep = activeStep + 1;
       // Validate current step before advancing
@@ -148,16 +152,18 @@ export function OnboardingStepper({
         spacing={2}
         sx={{ justifyContent: 'space-between', mt: 4 }}
       >
-        <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined" data-testid="back-button">
+        <Button disabled={activeStep === 0 || isSubmitting} onClick={handleBack} variant="outlined" data-testid="back-button">
           Back
         </Button>
         <Button
           variant="contained"
           onClick={handleNext}
+          disabled={isSubmitting}
           color={activeStep === steps.length - 1 ? 'success' : 'primary'}
           data-testid="next-button"
         >
-          {activeStep === steps.length - 1 ? 'Submit Application' : 'Next'}
+          {isSubmitting && <CircularProgress size={22} color="inherit" />}
+          {isSubmitting ? 'Submitting' : activeStep === steps.length - 1 ? 'Submit Application' : 'Next'}
         </Button>
       </Stack>
     </Box>

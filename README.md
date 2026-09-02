@@ -21,6 +21,28 @@ This pattern gives us a predictable lifecycle: create -> import schema -> listen
 
 The schema transformation helper in [src/utils/schemaBuilder.ts](src/utils/schemaBuilder.ts) also normalizes FEEL visibility expressions into the conditional.hide structure that the form engine expects. In other words, the authoring format stays simple in JSON, while the runtime layer converts it into the shape the renderer understands.
 
+## Application pages
+
+The application uses React Router to separate the onboarding workflow from the post-submission view.
+
+### Onboarding page (`/`)
+
+The onboarding page is the main multi-step workflow. Its stepper is generated from the tabs in the onboarding schema rather than hardcoded in the page. Users can:
+
+- complete schema-driven form steps with FEEL-based conditional visibility
+- maintain entity participants in the ownership and relationship tree
+- move between steps only after the required validation succeeds
+- see debounced draft-save feedback while working
+- submit the completed onboarding dossier from the final step
+
+Submission uses a short simulated delay. During that delay, the final action is disabled and displays a loader with the `Submitting` label to prevent duplicate submissions.
+
+### Submission success page (`/success`)
+
+After a successful submission, the app navigates to a separate success page and displays the submitted case ID, timestamp, and JSON payload. The copy icon beside the payload heading copies the formatted payload to the clipboard and shows confirmation feedback.
+
+Returning to the onboarding page resets the form to its initial state and removes the case draft and participant data from localStorage. This provides a clean starting point for the next onboarding submission.
+
 ## RPC-over-HTTP constraints and client enforcement
 
 The HTTP client in [src/api/rpcClient.ts](src/api/rpcClient.ts) enforces the strict enterprise rule that every remote operation must be sent as a POST request.

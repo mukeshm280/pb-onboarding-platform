@@ -8,21 +8,29 @@ import { useDebouncedAutosave } from './hooks/useDebouncedAutosave';
 import { getStepSchema, getStepLabels } from './utils/schemaBuilder';
 import { validateStep } from './utils/schemaValidator';
 import type { EntityParticipant } from './types/rpc';
+import type { SubmittedRecord } from './types/router';
 
 const CASE_ID = 'CASE-PB-2026-001';
 
-export const App: React.FC = () => {
+interface AppProps {
+  onSubmitSuccess?: (submittedData: SubmittedRecord) => void;
+}
+
+const createInitialFormData = (): Record<string, unknown> => ({
+  isTaxResidentSG: true,
+  isAccreditedInvestor: false,
+  participants: [] as EntityParticipant[],
+});
+
+export const App: React.FC<AppProps> = ({ onSubmitSuccess }) => {
   // 1. Local Staging Workspace State
-  const [formData, setFormData] = useState<Record<string, unknown>>({
-    isTaxResidentSG: true,
-    isAccreditedInvestor: false,
-    participants: [] as EntityParticipant[],
-  });
+  const [formData, setFormData] = useState<Record<string, unknown>>(createInitialFormData);
 
   const [activeStep, setActiveStep] = useState(0);
   const [stepSubmitted, setStepSubmitted] = useState<Record<number, boolean>>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 2. Get step labels dynamically from schema
   const stepLabels = useMemo(() => getStepLabels(), []);
@@ -126,9 +134,21 @@ export const App: React.FC = () => {
   }, []);
 
   // 11. Handle Final Submission
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const payload: SubmittedRecord = {
+      caseId: CASE_ID,
+      submittedAt: new Date().toISOString(),
+      data: formData,
+    };
+
     setSubmissionSuccess(true);
-  }, []);
+    onSubmitSuccess?.(payload);
+  }, [formData, isSubmitting, onSubmitSuccess]);
 
   const isCurrentStepSubmitted = Boolean(stepSubmitted[activeStep]);
 
@@ -183,6 +203,7 @@ export const App: React.FC = () => {
           onValidateStep={handleValidateStep}
           onValidationError={handleValidationError}
           onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
           completedSteps={completedSteps}
           hasErrors={isCurrentStepSubmitted && Object.keys(formErrors).length > 0}
           disableNextOnErrors={true}
