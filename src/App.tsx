@@ -26,9 +26,11 @@ export const App: React.FC = () => {
 
   // 2. Get step labels dynamically from schema
   const stepLabels = useMemo(() => getStepLabels(), []);
+  const lastStepIndex = Math.max(stepLabels.length - 1, 0);
 
   // 3. Get schema for current step (extracted without tabs)
   const currentStepSchema = useMemo(() => getStepSchema(activeStep), [activeStep]);
+  const isParticipantStep = activeStep === lastStepIndex;
 
   // 4. Attach Debounced Autosave Hook (500ms delay)
   const { status, lastSavedAt } = useDebouncedAutosave(CASE_ID, formData, 500);
@@ -185,49 +187,29 @@ export const App: React.FC = () => {
           hasErrors={isCurrentStepSubmitted && Object.keys(formErrors).length > 0}
           disableNextOnErrors={true}
         >
-          {/* Step 0: Entity Profile */}
-          {activeStep === 0 && (
+          {isParticipantStep ? (
             <Box>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                Entity Structure & Profile
-              </Typography>
-              <DynamicFormEngine
-                schema={currentStepSchema}
-                initialData={formData}
-                externalErrors={formErrors}
-                showAllErrors={isCurrentStepSubmitted}
-                onChange={handleFormChange}
-              />
-            </Box>
-          )}
-
-          {/* Step 1: Tax & Regulatory */}
-          {activeStep === 1 && (
-            <Box>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                Tax & Regulatory Profiling
-              </Typography>
-              <DynamicFormEngine
-                schema={currentStepSchema}
-                initialData={formData}
-                externalErrors={formErrors}
-                showAllErrors={isCurrentStepSubmitted}
-                onChange={handleFormChange}
-              />
-            </Box>
-          )}
-
-          {/* Step 2: Ownership Tree */}
-          {activeStep === 2 && (
-            <Box>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                Entity Ownership & Relationship Tree
+                {stepLabels[activeStep] || 'Entity Ownership & Relationship Tree'}
               </Typography>
               <ParticipantTree
                 caseId={CASE_ID}
                 participants={(formData.participants as EntityParticipant[]) || []}
                 showAllErrors={isCurrentStepSubmitted}
                 onUpdate={handleParticipantsUpdate}
+              />
+            </Box>
+          ) : (
+            <Box>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                {stepLabels[activeStep] || 'Onboarding Step'}
+              </Typography>
+              <DynamicFormEngine
+                schema={currentStepSchema}
+                initialData={formData}
+                externalErrors={formErrors}
+                showAllErrors={isCurrentStepSubmitted}
+                onChange={handleFormChange}
               />
             </Box>
           )}
